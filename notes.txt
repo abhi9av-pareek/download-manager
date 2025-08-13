@@ -1,0 +1,5 @@
+date 12 aug
+aaj sbse main topic coerce method pda function use krke maine protocol validation aur extension validation sikha
+=>protocol validation ka code likha, using little bit ai
+=>extension validation ka code likha
+=> error handling kari
