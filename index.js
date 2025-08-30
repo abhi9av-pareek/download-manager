@@ -7,7 +7,7 @@ const path = require("path");
 const http = require("http");
 const https = require("https");
 
-// Parse CLI arguments with full validations
+
 const argv = yargs(hideBin(process.argv))
   .option("download", {
     alias: "d",
@@ -18,7 +18,7 @@ const argv = yargs(hideBin(process.argv))
       try {
         const parsedUrl = new URL(url);
 
-        // Protocol validation check kiya
+      
         const protocol = parsedUrl.protocol.replace(":", "");
         if (!["http", "https"].includes(protocol)) {
           throw new Error(
@@ -26,7 +26,6 @@ const argv = yargs(hideBin(process.argv))
           );
         }
 
-        // Extension validation check kiya
         const allowedExtensions = [".zip", ".jpg", ".png", ".pdf"];
         const fileExtension = path.extname(parsedUrl.pathname).toLowerCase();
         if (!allowedExtensions.includes(fileExtension)) {
@@ -37,7 +36,7 @@ const argv = yargs(hideBin(process.argv))
           );
         }
 
-        return url; // Valid URL
+        return url;
       } catch (err) {
         console.error(err.message);
         process.exit(1);
@@ -52,7 +51,7 @@ const argv = yargs(hideBin(process.argv))
     coerce: (outputPath) => {
       const dir = path.dirname(outputPath);
       if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true }); // recursive properties use kr automatic dir banane ko 
+        fs.mkdirSync(dir, { recursive: true }); 
       }
       return outputPath;
     },
@@ -64,7 +63,6 @@ const argv = yargs(hideBin(process.argv))
 const url = argv.download;
 const protocol = url.startsWith("https") ? https : http;
 
-// If no output path provided, use filename from URL in current dir
 const fileNameFromUrl = url.split("/").pop() || "downloaded_file";
 const finalPath = argv.output
   ? argv.output
@@ -92,7 +90,7 @@ function downloadFile(downloadUrl, maxRedirects = 5) {
   };
 
   const req = protocol.get(downloadUrl, options, (response) => {
-    // Handle redirects
+  
     if (response.statusCode === 301 || response.statusCode === 302) {
       const location = response.headers.location;
       if (location) {
@@ -102,11 +100,9 @@ function downloadFile(downloadUrl, maxRedirects = 5) {
       }
     }
 
-    // Check if status code indicates success
     if (response.statusCode >= 200 && response.statusCode < 300) {
       const file = fs.createWriteStream(finalPath);
 
-      // Show download progress
       const totalSize = parseInt(response.headers["content-length"], 10);
       let downloadedSize = 0;
 
@@ -121,7 +117,7 @@ function downloadFile(downloadUrl, maxRedirects = 5) {
       response.pipe(file);
 
       file.on("finish", () => {
-        process.stdout.write("\n"); // New line after progress
+        process.stdout.write("\n"); 
         console.log(`✅ Download complete: ${finalPath}`);
         if (totalSize) {
           console.log(
@@ -132,7 +128,7 @@ function downloadFile(downloadUrl, maxRedirects = 5) {
 
       file.on("error", (err) => {
         console.error(`❌ File write error: ${err.message}`);
-        fs.unlink(finalPath, () => {}); // Clean up partial file
+        fs.unlink(finalPath, () => {}); 
       });
     } else {
       console.error(
@@ -140,7 +136,6 @@ function downloadFile(downloadUrl, maxRedirects = 5) {
       );
       console.error(`📝 Response: ${response.statusMessage}`);
 
-      // Try to get more error details
       let errorData = "";
       response.on("data", (chunk) => {
         errorData += chunk;
@@ -162,10 +157,8 @@ function downloadFile(downloadUrl, maxRedirects = 5) {
     console.error("❌ Request timeout");
     req.destroy();
   });
-
-  // Set timeout 30sec ke liye
+  
   req.setTimeout(30000); 
 }
 
-// Start download
 downloadFile(url);
