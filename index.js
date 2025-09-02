@@ -7,7 +7,6 @@ const path = require("path");
 const http = require("http");
 const https = require("https");
 
-
 const argv = yargs(hideBin(process.argv))
   .option("download", {
     alias: "d",
@@ -17,26 +16,35 @@ const argv = yargs(hideBin(process.argv))
     coerce: (url) => {
       try {
         const parsedUrl = new URL(url);
-
-      
+        
         const protocol = parsedUrl.protocol.replace(":", "");
         if (!["http", "https"].includes(protocol)) {
           throw new Error(
-            `❌ Invalid protocol: ${protocol}. Only http and https are allowed.`
+            `Invalid protocol❌ : ${protocol}. Only http and https are allowed.`
           );
         }
 
-        const allowedExtensions = [".zip", ".jpg", ".png", ".pdf"];
+        
+        const allowedExtensions = [
+          ".zip",
+          ".jpg",
+          ".png",
+          ".pdf",
+          ".img",
+          ".md",
+          ".txt",
+          ".mp4",
+        ];
         const fileExtension = path.extname(parsedUrl.pathname).toLowerCase();
         if (!allowedExtensions.includes(fileExtension)) {
           throw new Error(
-            `❌ Invalid file type: ${
+            `Invalid file type❌: ${
               fileExtension || "none"
             }. Allowed types: ${allowedExtensions.join(", ")}`
           );
         }
 
-        return url;
+        return url; 
       } catch (err) {
         console.error(err.message);
         process.exit(1);
@@ -59,23 +67,24 @@ const argv = yargs(hideBin(process.argv))
   .help()
   .parse();
 
-// Extract values
+
 const url = argv.download;
 const protocol = url.startsWith("https") ? https : http;
+
 
 const fileNameFromUrl = url.split("/").pop() || "downloaded_file";
 const finalPath = argv.output
   ? argv.output
   : path.join(process.cwd(), fileNameFromUrl);
 
-// Function to download file with proper headers
+
 function downloadFile(downloadUrl, maxRedirects = 5) {
   if (maxRedirects <= 0) {
-    console.error("❌ Too many redirects");
+    console.error("Too many redirects");
     return;
   }
 
-  console.log(`⬇️ Starting download from: ${downloadUrl}`);
+  console.log(`Starting download from⬇️: ${downloadUrl}`);
 
   const options = {
     headers: {
@@ -90,19 +99,21 @@ function downloadFile(downloadUrl, maxRedirects = 5) {
   };
 
   const req = protocol.get(downloadUrl, options, (response) => {
-  
+    // Handle redirects
     if (response.statusCode === 301 || response.statusCode === 302) {
       const location = response.headers.location;
       if (location) {
-        console.log(`🔄 Redirecting to: ${location}`);
+        console.log(`Redirecting to: ${location}`);
         downloadFile(location, maxRedirects - 1);
         return;
       }
     }
 
+    
     if (response.statusCode >= 200 && response.statusCode < 300) {
       const file = fs.createWriteStream(finalPath);
 
+      
       const totalSize = parseInt(response.headers["content-length"], 10);
       let downloadedSize = 0;
 
@@ -110,7 +121,7 @@ function downloadFile(downloadUrl, maxRedirects = 5) {
         downloadedSize += chunk.length;
         if (totalSize) {
           const progress = ((downloadedSize / totalSize) * 100).toFixed(1);
-          process.stdout.write(`\r📥 Downloading... ${progress}%`);
+          process.stdout.write(`\rDownloading... ${progress}%`);
         }
       });
 
@@ -118,24 +129,23 @@ function downloadFile(downloadUrl, maxRedirects = 5) {
 
       file.on("finish", () => {
         process.stdout.write("\n"); 
-        console.log(`✅ Download complete: ${finalPath}`);
+        console.log(`Download complete✅: ${finalPath}`);
         if (totalSize) {
           console.log(
-            `📊 File size: ${(downloadedSize / 1024 / 1024).toFixed(2)} MB`
+            `File size: ${(downloadedSize / 1024 / 1024).toFixed(2)} MB`
           );
         }
       });
 
       file.on("error", (err) => {
-        console.error(`❌ File write error: ${err.message}`);
+        console.error(`File write error: ${err.message}`);
         fs.unlink(finalPath, () => {}); 
       });
     } else {
-      console.error(
-        `❌ Failed to download. Status code: ${response.statusCode}`
-      );
-      console.error(`📝 Response: ${response.statusMessage}`);
+      console.error(`Failed to download. Status code: ${response.statusCode}`);
+      console.error(`Response: ${response.statusMessage}`);
 
+      
       let errorData = "";
       response.on("data", (chunk) => {
         errorData += chunk;
@@ -143,22 +153,21 @@ function downloadFile(downloadUrl, maxRedirects = 5) {
 
       response.on("end", () => {
         if (errorData) {
-          console.error(`📄 Error details: ${errorData.substring(0, 200)}...`);
+          console.error(`Error details: ${errorData.substring(0, 200)}...`);
         }
       });
     }
   });
 
   req.on("error", (err) => {
-    console.error(`❌ Network error: ${err.message}`);
+    console.error(`Network error: ${err.message}`);
   });
 
   req.on("timeout", () => {
-    console.error("❌ Request timeout");
+    console.error("Request timeout");
     req.destroy();
   });
-  
+
   req.setTimeout(30000); 
 }
-
 downloadFile(url);
