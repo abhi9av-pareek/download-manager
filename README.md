@@ -55,10 +55,13 @@ This will download sample.pdf into your downloads folder.
 
 =>Example Output
 ```
-📥 Starting download...
-Progress: 72% [█████████-----]
+Starting download...
+Progress: 72%
 ✅ Download completed! Saved to ./downloads/sample.pdf
 ```
+=> Sample of .m4 extension
+
+![ScreenRecording2025-09-03at23 49 55-ezgif com-video-to-gif-converter](https://github.com/user-attachments/assets/cc2c0b90-947b-4989-905d-902c1d6c5198)
 
 # Options
 Option	Alias	Description	Example
